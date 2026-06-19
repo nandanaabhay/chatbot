@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AI Assistant</title>
+    <style>
+        body {
+            background: #212121;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            background: #171717;
+            border-right: 1px solid #333;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        #documents {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: #2f2f2f;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            word-break: break-all;
+            font-size: 14px;
+        }
+
+        .clear-btn {
+            background: #cc241d;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .clear-btn:hover {
+            background: #9d1814;
+        }
+
+        /* MAIN CHAT CONTAINER */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #444;
+        }
+
+        .auth-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 20px;
+            background: #10a37f;
+            color: white;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background: #1a7f65;
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .user {
+            background: #2f2f2f;
+            padding: 12px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: right;
+            max-width: 70%;
+            margin-left: auto;
+        }
+
+        .bot {
+            background: #444654;
+            padding: 12px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: left;
+            white-space: pre-wrap;
+            max-width: 70%;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+            padding: 20px;
+            border-top: 1px solid #333;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            background: #2f2f2f;
+            color: white;
+            outline: none;
+        }
+
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            background: #10a37f;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1a7f65;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-container">
+
+        <div class="sidebar">
+            <h3>Uploaded PDFs</h3>
+            <div id="documents"></div>
+            <button class="clear-btn" onclick="clearChatHistory()">🗑️ Clear History</button>
+        </div>
+
+        <div class="container">
+            <div class="header">
+                <h2>AI Assistant</h2>
+                <div class="auth-buttons">
+                    {% if session.get("user_id") %}
+                    <span style="margin-right:15px;">Welcome <b>{{ session["username"] }}</b></span>
+                    <a href="/logout"><button class="nav-btn">Logout</button></a>
+                    {% else %}
+                    <span id="guest-marker" style="margin-right:15px; color:#aaa;">Browsing as <b>Guest</b></span>
+                    <a href="/login"><button class="nav-btn">Login</button></a>
+                    <a href="/register"><button class="nav-btn">Sign Up</button></a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="chat-box" id="chat-box">
+                {% for chat in chat_history %}
+                <div class="user">{{ chat.question }}</div>
+                <div class="bot">{{ chat.answer }}</div>
+                {% endfor %}
+            </div>
+
+            <input type="file" id="pdf-upload" hidden accept=".pdf" onchange="uploadFile()">
+
+            <form onsubmit="sendMessage(event)">
+                <input id="message" type="text" placeholder="Ask anything about your documents..." required>
+                <button type="button" onclick="document.getElementById('pdf-upload').click()">+</button>
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            loadDocuments();
+            const chatBox = document.getElementById("chat-box");
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        // 🎯 FIXED: Direct structural function to identify if current session is logged out
+        function isGuestSession() {
+            return document.getElementById("guest-marker") !== null;
+        }
+
+        /* UPLOAD PDF FILE */
+        async function uploadFile() {
+            if (isGuestSession()) {
+                alert("Please log in to upload files to your account.");
+                return;
+            }
+
+            const fileInput = document.getElementById("pdf-upload");
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append("pdf", file);
+
+            try {
+                const response = await fetch("/upload", { method: "POST", body: formData });
+                const result = await response.text();
+                alert(result);
+                loadDocuments();
+            } catch (error) {
+                alert("PDF Upload Failed");
+            }
+        }
+
+        /* FETCH & RENDER SAVED DOCUMENTS */
+        async function loadDocuments() {
+            const container = document.getElementById("documents");
+
+            // 🎯 FIX: Instantly empty old visual history entries out before running the fetch loop
+            container.innerHTML = "";
+
+            // Privacy intercept barrier. Wipes sidebar instantly if logged out!
+            if (isGuestSession()) {
+                container.innerHTML = '<div style="color: #666; font-size: 14px;">No files uploaded yet.</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch("/documents");
+                const docs = await response.json();
+
+                if (docs.length === 0) {
+                    container.innerHTML = '<div style="color: #666; font-size: 14px;">No files uploaded yet.</div>';
+                    return;
+                }
+
+                docs.forEach(doc => {
+                    container.innerHTML += `<div class="history-item">📄 ${doc.filename}</div>`;
+                });
+            } catch (err) {
+                console.error("Failed to load documents", err);
+            }
+        }
+
+        /* CLEAR USER CONVERSATION HISTORY */
+        /* CLEAR USER CONVERSATION HISTORY */
+        async function clearChatHistory() {
+            if (isGuestSession()) {
+                document.getElementById("chat-box").innerHTML = "";
+                return;
+            }
+
+            if (!confirm("Are you sure you want to clear your chat history and files?")) return;
+            try {
+                const response = await fetch("/clear_history", { method: "POST" });
+                if (response.ok) {
+                    document.getElementById("chat-box").innerHTML = "";
+                    // 🎯 ADD THIS: Refresh the sidebar list instantly
+                    loadDocuments();
+                } else {
+                    alert("Failed to delete history.");
+                }
+            } catch (err) {
+                console.error("Error deleting history:", err);
+            }
+        }
+
+
+
+        /* HANDLE STREAM CHAT INPUT */
+        async function sendMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById("message");
+            const message = input.value;
+            if (message.trim() === "") return;
+
+            const chatBox = document.getElementById("chat-box");
+
+            const userDiv = document.createElement("div");
+            userDiv.className = "user";
+            userDiv.textContent = message;
+            chatBox.appendChild(userDiv);
+
+            const botDiv = document.createElement("div");
+            botDiv.className = "bot";
+            botDiv.textContent = "Thinking...";
+            chatBox.appendChild(botDiv);
+
+            input.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch(`/stream?message=${encodeURIComponent(message)}`);
+                if (!response.ok) throw new Error("Connection failed.");
+
+                botDiv.textContent = "";
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    botDiv.textContent += decoder.decode(value);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            } catch (error) {
+                botDiv.textContent = "An error occurred. Please try again.";
+            }
+        }
+    </script>
+</body>
+
+</html>
