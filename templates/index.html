@@ -4,156 +4,177 @@
 <head>
     <meta charset="UTF-8">
     <title>AI Assistant</title>
-    <style>
-        body {
-            background: #212121;
-            color: white;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            overflow: hidden;
-        }
+   <style>
+    /* Global Reset & Theme */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-        .main-container {
-            display: flex;
-            height: 100vh;
-        }
+    body {
+        background: #ffffff;
+        color: #262626;
+        height: 100vh;
+        overflow: hidden;
+    }
 
-        /* SIDEBAR */
-        .sidebar {
-            width: 260px;
-            background: #171717;
-            border-right: 1px solid #333;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-        }
+    .main-container {
+        display: flex;
+        height: 100vh;
+    }
 
-        .sidebar h3 {
-            margin-bottom: 20px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px;
-        }
+    /* Sidebar */
+    .sidebar {
+        width: 280px;
+        background: #fcfcfc;
+        border-right: 1px solid #e5e5e5;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+    }
 
-        #documents {
-            flex: 1;
-            overflow-y: auto;
-        }
+    /* Changed Sidebar H3 to Black */
+    .sidebar h3 {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #000000; 
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e5e5e5;
+        padding-bottom: 10px;
+    }
 
-        .history-item {
-            background: #2f2f2f;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            word-break: break-all;
-            font-size: 14px;
-        }
+    #documents { flex: 1; overflow-y: auto; }
 
-        .clear-btn {
-            background: #cc241d;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-top: 15px;
-            width: 100%;
-        }
+    .history-item {
+        background: #ffffff;
+        padding: 10px;
+        border: 1px solid #e5e5e5;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #404040;
+    }
 
-        .clear-btn:hover {
-            background: #9d1814;
-        }
+    .clear-btn {
+        background: #ffffff;
+        border: 1px solid #e5e5e5;
+        color: #b91c1c;
+        padding: 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-top: 15px;
+        width: 100%;
+        font-size: 13px;
+        font-weight: 500;
+    }
 
-        /* MAIN CHAT CONTAINER */
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
+    .clear-btn:hover { background: #fef2f2; }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            border-bottom: 1px solid #444;
-        }
+    /* Main Chat Area */
+    .container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+    }
 
-        .auth-buttons {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .header {
+        padding: 20px 40px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-        .nav-btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 20px;
-            background: #10a37f;
-            color: white;
-            cursor: pointer;
-        }
+    /* Changed Header H2 to Black */
+    .header h2 {
+        font-family: 'Georgia', serif;
+        font-size: 22px;
+        color: #000000;
+    }
 
-        .nav-btn:hover {
-            background: #1a7f65;
-        }
+    /* Changed Guest marker text to Black */
+    #guest-marker {
+        color: #000000 !important;
+    }
 
-        .chat-box {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
+    .nav-btn {
+        padding: 8px 16px;
+        border: 1px solid #d4d4d4;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #171717;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 13px;
+    }
 
-        .user {
-            background: #2f2f2f;
-            padding: 12px;
-            border-radius: 10px;
-            margin: 10px 0;
-            text-align: right;
-            max-width: 70%;
-            margin-left: auto;
-        }
+    /* Chat Bubbles */
+    .chat-box {
+        flex: 1;
+        overflow-y: auto;
+        padding: 40px;
+    }
 
-        .bot {
-            background: #444654;
-            padding: 12px;
-            border-radius: 10px;
-            margin: 10px 0;
-            text-align: left;
-            white-space: pre-wrap;
-            max-width: 70%;
-        }
+    .user {
+        background: #f4f4f4;
+        color: #171717;
+        padding: 12px 20px;
+        border-radius: 16px;
+        margin: 10px 0;
+        text-align: right;
+        max-width: 60%;
+        margin-left: auto;
+    }
 
-        form {
-            display: flex;
-            gap: 10px;
-            padding: 20px;
-            border-top: 1px solid #333;
-        }
+    .bot {
+        color: #262626;
+        padding: 12px 0;
+        line-height: 1.7;
+        margin: 10px 0;
+        max-width: 80%;
+    }
 
-        input[type="text"] {
-            flex: 1;
-            padding: 15px;
-            border: none;
-            border-radius: 25px;
-            background: #2f2f2f;
-            color: white;
-            outline: none;
-        }
+    /* Input Area */
+    form {
+        padding: 20px 40px;
+        background: #ffffff;
+        display: flex;
+        gap: 12px;
+        border-top: 1px solid #f0f0f0;
+    }
 
-        button {
-            padding: 15px 25px;
-            border: none;
-            border-radius: 25px;
-            background: #10a37f;
-            color: white;
-            cursor: pointer;
-        }
+    input[type="text"] {
+        flex: 1;
+        padding: 16px;
+        border: 1px solid #d4d4d4;
+        border-radius: 10px;
+        background: #ffffff;
+        font-size: 16px;
+        color: #171717;
+    }
 
-        button:hover {
-            background: #1a7f65;
-        }
-    </style>
+    button[type="submit"] {
+        background: #171717;
+        color: #ffffff;
+        padding: 0 24px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+    }
+
+    button[type="button"] {
+        background: #f4f4f4;
+        border: 1px solid #d4d4d4;
+        padding: 0 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        color: #171717;
+    }
+</style>
 </head>
 
 <body>
@@ -174,7 +195,7 @@
                     <span style="margin-right:15px;">Welcome <b>{{ session["username"] }}</b></span>
                     <a href="/logout"><button class="nav-btn">Logout</button></a>
                     {% else %}
-                    <span id="guest-marker" style="margin-right:15px; color:#aaa;">Browsing as <b>Guest</b></span>
+                    <span id="guest-marker" style="margin-right:15px; color:#ae7878;">Browsing as <b>Guest</b></span>
                     <a href="/login"><button class="nav-btn">Login</button></a>
                     <a href="/register"><button class="nav-btn">Sign Up</button></a>
                     {% endif %}

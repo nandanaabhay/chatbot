@@ -131,7 +131,7 @@ def home():
 
 
 
-
+# new user register
 @app.route("/register", methods=["GET", "POST"])
 
 def register():
@@ -169,7 +169,7 @@ def register():
 
 
 
-
+# login
 
 @app.route("/login", methods=["GET", "POST"])
 
@@ -213,32 +213,30 @@ def login():
 
 
 
+# logout
 
+from sqlalchemy import text # Ensure this is at the top of your file
 
-@app.route("/logout")
-
+@app.route('/logout')
 def logout():
-
+    user_id = session.get('user_id')
+    
+    # 1. Update status in database if user is logged in
+    if user_id:
+        db.session.execute(text("UPDATE users SET status = 0 WHERE id = :uid"), {"uid": user_id})
+        db.session.commit()
+    
+    # 2. Clear the server-side session
     session.clear()
-
     
-
-    # 1. Create a clean redirect back to the home page
-
-    response = redirect(url_for("home"))
-
+    # 3. Create the redirect response
+    response = redirect(url_for("login"))
     
-
-    # 2. Clear the browser's memory cache so old data disappears instantly
-
+    # 4. Force browser to ignore cache so data doesn't persist after logout
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-
     response.headers["Pragma"] = "no-cache"
-
     response.headers["Expires"] = "0"
-
     
-
     return response
 
 
@@ -531,4 +529,4 @@ if __name__ == "__main__":
 
         db.create_all()
 
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5002)
